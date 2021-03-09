@@ -1,5 +1,3 @@
-amogh
-
 CS 411: Database System
 
 Team: 
