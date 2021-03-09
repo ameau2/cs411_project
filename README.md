@@ -2,7 +2,7 @@
 
 CS 411: Database System
 
-Team:
+Team: 
 
     DB Team 21
 
