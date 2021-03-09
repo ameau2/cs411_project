@@ -1,0 +1,89 @@
+version: "3.9"
+   
+services:
+  postgresdb:
+    container_name: cs411-postgresdb
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=WandrLog
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - cs411-postgres-data:/var/lib/postgresql/data
+      - ./script/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./script/sql/init.sql:/docker-entrypoint-initdb.d/schema.sql
+    #networks:
+    #  - cs411-network
+  pgadmin:
+    container_name: cs411-pgdadmin
+    image: dpage/pgadmin4:latest
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=db21@illinois.edu
+      - PGADMIN_DEFAULT_PASSWORD=password
+      - PGADMIN_LISTEN_PORT=8080
+    #networks:
+    #  - cs411-network
+    ports:
+      - "8080:8080"
+    links:
+      - "postgresdb:pgsql-server"
+    volumes:
+      - cs411-pgadmin-data:/var/lib/pgadmin
+      - cs411-postgres-data
+  mongodb: 
+    image : mongo:latest
+    container_name: cs411-mongodb
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    volumes:
+      - cs411-mongodb-data:/data/db
+    ports:
+      - 27017:27017
+    restart: unless-stopped
+  nginx:
+    image: nginx:latest
+    container_name: cs411-nginx
+    restart: always
+#    build: ./nginx
+    ports: 
+      - "80:80"
+    volumes:
+       - ./src:/usr/src/app
+       - ./www:/www/static
+#    links:
+#      - web:web
+#  web:
+#    container_name: cs411-web
+#    build: .
+#    restart: always
+#    command: python3 manage.py runserver 0.0.0.0:8000
+#    volumes:
+#      - cs411-web-django:/usr/src/app
+#      - cs411-web-static:/usr/src/app/static
+#    ports:
+#      - "8000:8000"
+#    links:
+#      - postgresdb:postgresdb
+#      - mongodb:mongodb
+#    depends_on:
+#      - mongodb
+#      - postgresdb
+#    environment:
+#      - DEBUG='true'
+#networks:
+#  cs411-network:
+#    driver: bridge
+
+volumes:
+  cs411-mongodb-data:
+  cs411-postgres-data:
+  cs411-pgadmin-data:
+  cs411-nginx:
+#  cs411-web-django:
+#  cs411-web-static:
