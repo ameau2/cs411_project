@@ -1,7 +1,7 @@
 
 
 CS 411: Database System
-Test!
+
 Team: 
 
     DB Team 21
