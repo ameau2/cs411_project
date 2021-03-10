@@ -14,25 +14,25 @@ services:
       - cs411-postgres-data:/var/lib/postgresql/data
       - ./script/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./script/sql/init.sql:/docker-entrypoint-initdb.d/schema.sql
-    #networks:
-    #  - cs411-network
-  pgadmin:
-    container_name: cs411-pgdadmin
-    image: dpage/pgadmin4:latest
-    restart: always
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=db21@illinois.edu
-      - PGADMIN_DEFAULT_PASSWORD=password
-      - PGADMIN_LISTEN_PORT=8080
-    #networks:
-    #  - cs411-network
-    ports:
-      - "8080:8080"
-    links:
-      - "postgresdb:pgsql-server"
-    volumes:
-      - cs411-pgadmin-data:/var/lib/pgadmin
-      - cs411-postgres-data
+    networks:
+      - cs411-network
+#  pgadmin:
+#    container_name: cs411-pgdadmin
+#    image: dpage/pgadmin4:latest
+#    restart: always
+#    environment:
+#      - PGADMIN_DEFAULT_EMAIL=db21@illinois.edu
+#      - PGADMIN_DEFAULT_PASSWORD=password
+#      - PGADMIN_LISTEN_PORT=8080
+#    networks:
+#      - cs411-network
+#    ports:
+#      - "8080:8080"
+#    links:
+#      - "postgresdb:pgsql-server"
+#    volumes:
+#      - cs411-pgadmin-data:/var/lib/pgadmin
+#      - cs411-postgres-data
   mongodb: 
     image : mongo:latest
     container_name: cs411-mongodb
@@ -43,6 +43,8 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=password
     volumes:
       - cs411-mongodb-data:/data/db
+    networks:
+      - cs411-network
     ports:
       - 27017:27017
     restart: unless-stopped
@@ -51,6 +53,8 @@ services:
     container_name: cs411-nginx
     restart: always
 #    build: ./nginx
+    networks:
+      - cs411-network
     ports: 
       - "80:80"
     volumes:
@@ -58,27 +62,28 @@ services:
        - ./www:/www/static
 #    links:
 #      - web:web
-#  web:
-#    container_name: cs411-web
-#    build: .
-#    restart: always
-#    command: python3 manage.py runserver 0.0.0.0:8000
-#    volumes:
+  web:
+    container_name: cs411-web
+    build: ./src/app
+    restart: always
+    command: python3 manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./src/app/:/usr/src/app
 #      - cs411-web-django:/usr/src/app
 #      - cs411-web-static:/usr/src/app/static
-#    ports:
-#      - "8000:8000"
-#    links:
-#      - postgresdb:postgresdb
+    ports:
+      - "8000:8000"
+    networks:
+      - cs411-network
+    links:
+      - postgresdb:postgresdb
 #      - mongodb:mongodb
-#    depends_on:
+    depends_on:
 #      - mongodb
-#      - postgresdb
-#    environment:
-#      - DEBUG='true'
-#networks:
-#  cs411-network:
-#    driver: bridge
+      - postgresdb
+networks:
+  cs411-network:
+    driver: bridge
 
 volumes:
   cs411-mongodb-data:
