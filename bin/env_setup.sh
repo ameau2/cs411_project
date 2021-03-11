@@ -1,0 +1,1 @@
+PATH='/home/bin:$PATH'

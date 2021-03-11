@@ -1,0 +1,1 @@
+copy traveler FROM '/home/data/sample_traveler.csv' DELIMITER ';' CSV HEADER;

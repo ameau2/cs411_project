@@ -1,0 +1,4 @@
+id;first_name;last_name;address;phone;email;bio;profile_picture;location;credit_card_info;email_confirmation
+1;Connor;Burken;901 West Illinois Street, Urbana, IL 61801;217-333-0302;cburke8@illinois.edu;;;;;
+2;Amogh;Masandrishi;20 W 34th St, New York, NY 10001;(212) 736-3100;masandrishi@gmail.com;;;;;
+3;Alex;Meau;600 Montgomery St, San Francisco, CA 94111;800-797-2643;ameau2@illinois.edu;;;;;
