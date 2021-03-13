@@ -35,7 +35,7 @@ services:
       - "postgresdb:pgsql-server"
     volumes:
       - cs411-pgadmin-data:/var/lib/pgadmin
-      - cs411-postgres-data
+      #- cs411-postgres-data
   mongodb: 
     image : mongo:latest
     container_name: cs411-mongodb
@@ -71,9 +71,8 @@ services:
     restart: always
     command: python3 manage.py runserver 0.0.0.0:8000
     volumes:
-      - ./src/app/:/usr/src/app
-#      - cs411-web-django:/usr/src/app
-#      - cs411-web-static:/usr/src/app/static
+      - cs411-web-django:/usr/src/app
+      - cs411-web-static:/usr/src/app/static
     ports:
       - "8000:8000"
     networks:
@@ -93,5 +92,5 @@ volumes:
   cs411-postgres-data:
   cs411-pgadmin-data:
   cs411-nginx:
-#  cs411-web-django:
-#  cs411-web-static:
+  cs411-web-django:
+  cs411-web-static:

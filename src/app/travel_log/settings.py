@@ -25,7 +25,7 @@ SECRET_KEY = '$%0gj(=7o7d247whim23=*$i&mq#sxmub)i98d_3_m6-o^w!dv'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -75,8 +75,13 @@ WSGI_APPLICATION = 'travel_log.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+	'ENGINE': 'django.db.backends.postgresql',
+	'NAME': 'postgres',
+	'USER': 'postgres',
+	'PASSWORD': 'password',
+	'HOST': 'postgresdb',
+        #'ENGINE': 'django.db.backends.sqlite3',
+        #'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
