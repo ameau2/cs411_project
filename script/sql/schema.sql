@@ -17,7 +17,7 @@ CREATE TABLE traveler (
     bio TEXT,
     -- user_gender gender NOT NULL,
     profile_picture bytea,
-    location VARCHAR(255),
+    --location VARCHAR(255),
     credit_card_info VARCHAR(255),
     email_confirmation boolean
 );
