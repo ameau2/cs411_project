@@ -7,7 +7,7 @@ Team:
 Members:
 
     Burken, Connor Barnard cburke8@illinois.edu;
-    masandrishi masandrishi@gmail.com;
+    Phadke, Amogh aphadke3@illinois.edu;
     Dunor, Aaron adunor2@illinois.edu;
     Meau, Alex ameau2@illinois.edu
 
