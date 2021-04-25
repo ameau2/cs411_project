@@ -1,0 +1,7 @@
+
+<h1> Edit {{ destination.city_name}}</h1>
+<form action='{% url "destination_update" destination_id=destination.id %}' method="post">
+    {% csrf_token %}
+    {{ destination_form }}
+    <input type="submit" value="Update">
+</form>

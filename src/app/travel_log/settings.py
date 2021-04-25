@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 from pathlib import Path
+import pymongo
+import mongoengine
+import os
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,12 +29,13 @@ SECRET_KEY = '$%0gj(=7o7d247whim23=*$i&mq#sxmub)i98d_3_m6-o^w!dv'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['sp21-cs411-33.cs.illinois.edu', 'localhost', '127.0.0.1']
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'WandrLog.apps.WandrlogConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -68,23 +73,22 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'travel_log.wsgi.application'
-
-
+AUTH_USER_MODEL = 'WandrLog.Traveler'
+LOGIN_REDIRECT_URL = 'home'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 DATABASES = {
     'default': {
-	'ENGINE': 'django.db.backends.postgresql',
-	'NAME': 'postgres',
-	'USER': 'postgres',
-	'PASSWORD': 'password',
-	'HOST': 'postgresdb',
-        #'ENGINE': 'django.db.backends.sqlite3',
-        #'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'WandrLog',
+        'USER': 'postgres',
+        'HOST': 'postgresdb',
+        'PORT': 5432,
+        'PASSWORD':'password'
     }
-}
 
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -123,3 +127,5 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT ='WandrLog/static'
+STATICFILES_DIRS = [os.path.join(BASE_DIR,'WandrLog/media'),]

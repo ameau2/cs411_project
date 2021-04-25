@@ -1,0 +1,23 @@
+
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Latitude</th>
+        <th>Longitude</th>
+        <th>Country Code</th>
+        <th>Update</th>
+        <th>Delete</th>
+    </tr>
+    {% for dest in destination %}
+        <tr>
+            <th>{{dest.id}}</th>
+            <th>{{dest.city_name}}</th>
+            <th>{{dest.latitude}}</th>
+            <th>{{dest.longitude}}</th>
+            <th>{{dest.country_code}}</th>
+            <th><a href='{% url "destination_update" destination_id=dest.id %}'>Edit Destination</a></th>
+            <th><a href='{% url "destination_delete" destination_id=dest.id %}'>Delete</a></th>
+        </tr>
+    {% endfor %}
+
+

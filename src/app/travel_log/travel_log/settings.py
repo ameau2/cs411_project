@@ -26,12 +26,13 @@ SECRET_KEY = '_nmpi_6lhnqchrv0(gad&c1&7##-wo^-w77&04gs7)m$b1*qn^'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['sp21-cs411-33.cs.illinois.edu', 'localhost', '127.0.0.1']
 #ALLOWED_HOSTS = localhost 127.0.0.1 [::1]
 
 # Application definition
 
 INSTALLED_APPS = [
+    'WandrLog.apps.WandrlogConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -82,13 +83,21 @@ WSGI_APPLICATION = 'travel_log.wsgi.application'
 #}
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / 'db.sqlite3',
-        "USER": "postgres",
-        "PASSWORD": "password",
-        "HOST": "localhost",
-        "PORT": "5432",
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'WandrLog',
+        'USER': 'postgres',
+        'HOST': 'postgresdb',
+        'PORT': 5432,
+        'PASSWORD':'password'
+    }
+    'trips': {
+        'ENGINE':'djongo',
+        'NAME':'trips',
+        'USER':'root',
+        'PASSWORD':'password',
+        'HOST': 'mongodb'
+        'PORT': 27017
     }
 }
 

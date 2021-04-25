@@ -1,0 +1,20 @@
+{% extends 'WandrLog/base.html' %}
+{% load static %}
+{% block content %}
+<section class="page-section bg-dark text-white" style="height: 100px;">
+    <div class="col-6 align-left">
+        <i id="search-icon" class="fas fa-search"></i>
+        <input id="user-input" placeholder="Search">
+    </div>
+
+</section>
+
+<a href="{% url 'destinations' %}">Show First 1000 Destinations</a>
+
+<table id="replaceable-content" style="width:100%">
+    {% include 'WandrLog/_partials/_destination_results.html' %}
+</table>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script type="text/javascript" src="{% static 'liveSearch.js' %}"></script>
+{% endblock %}

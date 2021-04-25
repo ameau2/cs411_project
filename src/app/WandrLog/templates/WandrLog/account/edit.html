@@ -1,0 +1,7 @@
+
+<h1> Edit {{ traveler.first_name}}</h1>
+<form action='{% url "edit" traveler_id=traveler.id %}' method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="Update">
+</form>

@@ -1,0 +1,10 @@
+{% for comment in trip.comments %}
+<div class="media">
+  <div class="media-body">
+    <h6 class="mt-0">{{comment.user_name}}</h6>
+    <p>{{comment.comment}}</p>
+    <p class="media-text"><small class="text-muted">Date {{comment.published}}</small></p>
+  </div>
+</div>
+{% endfor %}
+

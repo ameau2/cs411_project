@@ -1,0 +1,91 @@
+{% extends 'WandrLog/base.html' %}
+{% load static %}
+{% block content %}
+
+
+
+<div class="container-fluid bg-dark" style="height: 75px;">
+
+</div>
+<div class="container-fluid" style="height: 50px;">
+
+</div>
+
+
+<h2>Create Trip</h2>
+<form action='{% url "create_trip" %}' method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% for field in trip_form %}
+        <p>{{field.label_tag}}
+            {{field}}
+            
+
+            {% if field.help_text %}
+                <small style="color: grey;">{{field.help_text}}</small>
+            {% endif %}
+            
+            {% for error in field.errors %}
+                <p style="color: red;">{{error}}</p>
+            {% endfor %}
+
+            {% if field.name == 'destination_name' %}
+            <datalist id="cityname">
+                    {% include 'WandrLog/_partials/_destination_results_form.html' %}
+            </datalist>
+            {% endif %}
+
+
+        </p>
+    {% endfor %}
+    <button type="submit">Create!</button>
+</form>
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<script type="text/javascript">
+const user_input = $("#id_destination_name")
+const search_icon = $('#search-icon')
+const destination_div = $('#cityname')
+const endpoint = '/WandrLog/destinations/'
+const delay_by_in_ms = 700
+let scheduled_function = false
+
+let ajax_call = function (endpoint, request_parameters) {
+    $.getJSON(endpoint, request_parameters)
+        .done(response => {
+
+            // fade out the destination_div, then:
+            destination_div.fadeTo('slow', 0).promise().then(() => {
+                // replace the HTML contents
+                destination_div.html(response['html_from_view'])
+                // fade-in the div with new contents
+                destination_div.fadeTo('slow', 1)
+                // stop animating search icon
+                search_icon.removeClass('blink')
+            })
+        })
+}
+
+
+user_input.on('keyup', function () {
+    user_input.attr('list','cityname')
+
+    const request_parameters = {
+        q: $(this).val() // value of user_input: the HTML element with ID user-input
+    }
+
+    // start animating the search icon with the CSS class
+    search_icon.addClass('blink')
+
+    // if scheduled_function is NOT false, cancel the execution of the function
+    if (scheduled_function) {
+        clearTimeout(scheduled_function)
+    }
+
+    // setTimeout returns the ID of the function to be executed
+    scheduled_function = setTimeout(ajax_call, delay_by_in_ms, endpoint, request_parameters)
+})
+</script>
+
+{% endblock content %}

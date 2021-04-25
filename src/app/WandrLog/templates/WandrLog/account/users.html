@@ -1,0 +1,43 @@
+{% extends 'WandrLog/base.html' %}
+
+{% block content %}
+
+<section class="page-section bg-dark text-white" style="height: 100px;">
+  <div class="container-fluid">
+      <h2 class="mb-1">Search Users</h2>
+
+<form method='GET' action='{% url "users" %}'>
+    <input type='text' name='q' placeholder="Enter Users First Name" value='{{ request.GET.q }}' id='intry'>
+    <input type='submit' value='Search' class='button_1' id='sub1'>
+</form>
+</div>
+</section>
+<a href="{% url 'users' %}">Show All Users</a>
+
+<table style="width:100%">
+  <tr>
+     <th>ID</th>
+      <th>First Name</th>
+      <th>Last Name</th>
+      <th>Email</th>
+      <th>Phone</th>
+      <th>Address</th>
+      <th>Profile</th>
+      <th>Edit</th>
+      <th>Delete</th>
+  </tr>
+  {% for trav in traveler %}
+  <tr>
+     <th>{{trav.id}}</th>
+      <th>{{trav.first_name}}</th>
+      <th>{{trav.last_name}}</th>
+      <th>{{trav.email}}</th>
+      <th>{{trav.phone}}</th>
+      <th>{{trav.address}}</th>
+      <th><a href="{% url 'account' traveler_id=trav.id%}">View Profile</a></th> 
+      <th><a href='{% url "edit" traveler_id=trav.id %}'>Edit User</a></th>
+      <th><a href='{% url "delete_user" traveler_id=trav.id %}'>Delete User</a></th>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock content %}

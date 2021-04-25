@@ -1,0 +1,85 @@
+{% extends 'WandrLog/base.html' %}
+{% load static %}
+{% load trips_extras %}
+{% block content %}
+
+<div class="container-fluid bg-dark" style="height: 75px;">
+
+</div>
+<div class="container-fluid" style="height: 50px;">
+
+</div>
+
+
+
+<section>
+    <div class="container">
+    <h2>{{trip.trip_name}}</h2>
+    <p>A trip by: {{traveler.first_name}} {{traveler.last_name}}</p>
+    <p>Destination: {{trip.destination_name}} Lat,Lon: {{destination.latitude}}, {{destination.longitude}}</p>
+
+
+    <img src="data:image/jpg;base64,{{trip.cover_image}}" alt="..." style="object-fit: none; object-position: center; width: 1000px; max-height: 700px; margin-bottom: 1rem;">
+    <p></p>
+    <p> Description: {{trip.trip_description}}</p>
+    
+    <div id="map-container-google-2" class="z-depth-1-half map-container container" style="object-fit: none; object-position: center; width: 1000px; height: 700px; margin-bottom: 1rem; overflow: hidden; padding-bottom:56.25%;position:relative;height:0;">
+      <iframe src="https://maps.google.com/maps?q={{destination.latitude}},{{destination.longitude}}&t=&z=13&ie=UTF8&iwloc=&output=embed"
+        frameborder="0" style="border:0; left:0; top:0; height:100%; width:100%; position: absolute;" allowfullscreen></iframe>
+    </div>
+    <p><small class="text-muted">Created {{trip.published}}</small></p>
+
+  </div>
+</section>
+
+<div class="container">
+  <h5>Visits</h5>
+  {% if request.user.id == trip.traveler_id%}
+    <a href="{% url 'create_visit' trip_id=trip|private:'_id'%}">Add Visit</a>
+  {% endif %}
+</div>
+
+{% for visit in trip.visits %}
+{% if visit.visit_id != -1 %}
+<section>
+ <div class="container d-flex align-self-start text-left">
+  <div class="card mb-3">
+    <img src="data:image/jpg;base64,{{visit.visit_image}}" class="card-img-top" alt="..." style="object-fit: cover; object-position: center; width: 1000px; margin-bottom: 1rem;" >
+    <div class="card-body">
+      <h5 class="card-title">{{visit.visit_name}}</h5>
+      <h5 class="card-text text-muted">{{visit.visit_place}}</h5>
+      <p class="card-text"> &emsp;{{visit.visit_log}}</p>
+      <p class="card-text"><small class="text-muted">Visited {{visit.published}}</small></p>
+      {% if request.user.id == trip.traveler_id%}
+        <a href="{% url 'edit_visit' trip_id=trip|private:'_id' visit_id=visit.visit_id %}">Edit</a>
+        <a href="{% url 'delete_visit' trip_id=trip|private:'_id' visit_id=visit.visit_id %}" onclick="return confirm('Are you sure?')" >Delete</a>
+      {% endif %}
+    </div>
+  </div>
+  </div>
+</section>
+{% endif %}
+{% endfor %}
+
+
+<section>
+  <div class="container">
+    <h5>Comments</h5>
+
+    <div>
+      <form method='GET' action="{% url 'create_comment' trip_id=trip|private:'_id' %}">
+        <input type='text' name='c' placeholder="Leave a comment.." value='{{ request.GET.c }}' id='intry'>
+        <input type='submit' value='Submit' class='button_1' id='sub1'>
+      </form>
+    </div>
+
+     <div>
+        {% include 'WandrLog/_partials/_comments.html' %}
+    </div>
+  </div>
+</section>
+
+
+
+
+{% endblock content %}
