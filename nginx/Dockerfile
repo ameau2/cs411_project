@@ -27,5 +27,5 @@ WORKDIR /etc/nginx
 CMD ["nginx"]
 
 # Expose ports.
-EXPOSE 80
+EXPOSE 8000
 EXPOSE 443

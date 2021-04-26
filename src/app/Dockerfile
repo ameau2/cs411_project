@@ -41,17 +41,11 @@ RUN cd /depends \
 
 RUN apk add openjdk11 bash
 
-RUN wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-5.1.1.tar.gz
-
-RUN tar -xzf elasticsearch-5.1.1.tar.gz
-
-RUN ./elasticsearch-5.1.1/bin/elasticsearch
-
 RUN pip install psycopg2-binary
 
 RUN pip install -r requirements.txt
 
-RUN python3 -m pip install --upgrade Pillow
+RUN python3 -m pip install --upgrade Pillow pymongo
 
 ADD . /usr/src/app
 # copy project

@@ -71,17 +71,18 @@ services:
     restart: always
     command: python3 manage.py runserver 0.0.0.0:8000
     volumes:
-      - cs411-web-django:/usr/src/app
-      - cs411-web-static:/usr/src/app/static
+      - ./src/app:/usr/src/app
+      #- cs411-web-django:/usr/src/app
+      #- cs411-web-static:/usr/src/app/static
     ports:
       - "8000:8000"
     networks:
       - cs411-network
     links:
       - postgresdb:postgresdb
-#      - mongodb:mongodb
+      - mongodb:mongodb
     depends_on:
-#      - mongodb
+      - mongodb
       - postgresdb
 networks:
   cs411-network:
