@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 from pathlib import Path
+import pymongo
+import os
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,14 +23,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '_nmpi_6lhnqchrv0(gad&c1&7##-wo^-w77&04gs7)m$b1*qn^'
-#SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = '$%0gj(=7o7d247whim23=*$i&mq#sxmub)i98d_3_m6-o^w!dv'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['sp21-cs411-33.cs.illinois.edu', 'localhost', '127.0.0.1']
-#ALLOWED_HOSTS = localhost 127.0.0.1 [::1]
+ALLOWED_HOSTS = ['sp21-cs411-33.cs.illinois.edu', 'localhost', '127.0.0.1', '0.0.0.0', '*']
+
 
 # Application definition
 
@@ -70,17 +72,10 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'travel_log.wsgi.application'
-
-
+AUTH_USER_MODEL = 'WandrLog.Traveler'
+LOGIN_REDIRECT_URL = 'home'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.sqlite3',
-#        'NAME': BASE_DIR / 'db.sqlite3',
-#    }
-#}
 
 DATABASES = {
     'default': {
@@ -91,16 +86,8 @@ DATABASES = {
         'PORT': 5432,
         'PASSWORD':'password'
     }
-    'trips': {
-        'ENGINE':'djongo',
-        'NAME':'trips',
-        'USER':'root',
-        'PASSWORD':'password',
-        'HOST': 'mongodb'
-        'PORT': 27017
-    }
-}
 
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -139,3 +126,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT ='WandrLog/static'
+
+STATICFILES_DIRS = [os.path.join(BASE_DIR,'WandrLog/static/bs'),]

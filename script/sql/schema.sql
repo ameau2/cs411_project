@@ -1,6 +1,3 @@
-DROP TYPE IF EXISTS gender;
-CREATE TYPE gender AS ENUM ('male', 'female', 'other');
-
 --DROP SEQUENCE IF EXISTS traveler_id_sequence;
 --CREATE SEQUENCE traveler_id_sequence start 1 increment 1;
 
@@ -9,17 +6,19 @@ CREATE TABLE traveler (
     id  SERIAL PRIMARY KEY,
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
-    -- password VARCHAR(1025) NOT NULL,
+    password VARCHAR(1025) NOT NULL,
     address VARCHAR(1025),
     phone VARCHAR(50),
-    email VARCHAR(255) NOT NULL,
-    -- birth_date DATE CHECK(birth_date > '1900-01-01'),
+    email VARCHAR(255) NOT NULL UNIQUE,
     bio TEXT,
-    -- user_gender gender NOT NULL,
     profile_picture bytea,
-    --location VARCHAR(255),
     credit_card_info VARCHAR(255),
-    email_confirmation boolean
+    date_joined DATE,
+    last_login DATE,
+    is_admin boolean,
+    is_active boolean,
+    is_staff boolean,
+    is_superuser boolean
 );
 
 --ALTER SEQUENCE traveler_id_sequence OWNED BY traveler.id;
