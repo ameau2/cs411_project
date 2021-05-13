@@ -1,0 +1,33 @@
+
+{% load trips_extras %}
+
+<div id="like_count{{trip|private:'_id'}}" >Likes: {{trip.likes|length}}</div>
+{%if request.user.id in trip.likes%}
+<input type="button" id="like{{trip|private:'_id'}}" name="{{trip_id}}" value="Unlike" onclick="javascript:toggle(this);">
+{%else%}
+<input type="button" id="like{{trip|private:'_id'}}" name="{{trip_id}}" value="Like" onclick="javascript:toggle(this);"> 
+{%endif%}
+
+<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+<script type="text/javascript">
+$(function() {
+  var count = 0;
+  $("#like{{trip|private:'_id'}}").click(function() {
+
+      $.get("{% url 'like' trip_id=trip|private:'_id'%}", {'mydata': 'xyz'}, function(data) {
+        $("#like_count{{trip|private:'_id'}}").html("Likes: " + data['like_count']);
+    });
+  });
+});
+
+function toggle(button) {
+    switch (button.value) {
+        case "Like":
+            button.value = "Unlike";
+            break;
+        case "Unlike":
+            button.value = "Like";
+            break;
+    }
+}
+</script>

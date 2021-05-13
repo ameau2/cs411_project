@@ -1,10 +1,19 @@
+{% load trips_extras %}
 {% for comment in trip.comments %}
+{% if comment.comment_id != -1 %}
 <div class="media">
   <div class="media-body">
-    <h6 class="mt-0">{{comment.user_name}}</h6>
-    <p>{{comment.comment}}</p>
-    <p class="media-text"><small class="text-muted">Date {{comment.published}}</small></p>
+    
+    <p><b>{{comment.user_name}}</b> says: <br> &emsp; {{comment.comment}}</p>
+    <p><small class="text-muted">Date {{comment.published}}
+    {% if request.user.id == comment.user_id%}
+     - <a href="{% url 'delete_comment' trip_id=trip|private:'_id' comment_id=comment.comment_id %}" onclick="return confirm('Are you sure?')" >Delete</a>
+    {% endif %}
+  </small></p>
   </div>
 </div>
+<hr>
+{% endif %}
 {% endfor %}
+
 

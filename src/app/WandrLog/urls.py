@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('',views.index,name="home"),
+    path('advanced',views.advanced,name="advanced"),
 
     path('trips',views.trips,name="trips"),
     path('create_trip',views.create_trip,name="create_trip"),
@@ -15,6 +16,9 @@ urlpatterns = [
     path(r'^delete_visit/(?P<trip_id>\d+)$/(?P<visit_id>\d+)$', views.delete_visit, name="delete_visit"),
 
     path(r'^create_comment/(?P<trip_id>\d+)$', views.create_comment, name="create_comment"),
+    path(r'^delete_comment/(?P<trip_id>\d+)$/(?P<comment_id>\d+)$', views.delete_comment, name="delete_comment"),
+
+    path(r'^like/(?P<trip_id>\d+)$', views.like, name="like"),
 
     path('sign_up', views.sign_up, name="sign-up"),
     path('log_out', views.log_out, name="log_out"),
@@ -22,6 +26,8 @@ urlpatterns = [
 
     path(r'^account_edit/(?P<traveler_id>\d+)$', views.traveler_update, name="account_edit"),
     path(r'^account/(?P<traveler_id>\d+)$', views.traveler_profile, name="account"),
+    path(r'^friend/(?P<traveler_id>\d+)$', views.friend, name="friend"),
+    path(r'^unfriend/(?P<traveler_id>\d+)$', views.unfriend, name="unfriend"),
 
     path('users', views.users, name='users'),
     path(r'^edit/(?P<traveler_id>\d+)$', views.edit, name='edit'),
@@ -30,7 +36,11 @@ urlpatterns = [
     path('destinations/', views.destinations, name='destinations'),
     path(r'^destination_update/(?P<destination_id>\d+)$', views.destination_update, name='destination_update'),
     path(r'^destination_delete/(?P<destination_id>\d+)$', views.destination_delete, name='destination_delete'),
+    path(r'^favorite/(?P<destination_id>\d+)$', views.favorite, name='favorite'),
+    path(r'^unfavorite/(?P<destination_id>\d+)$', views.unfavorite, name='unfavorite'),
 
+    path('attractions/', views.attractions, name='attractions'),
+    path(r'^attractions_form/(?P<trip_id>\d+)$', views.attractions_form, name='attractions_form'),
 ]
 
 

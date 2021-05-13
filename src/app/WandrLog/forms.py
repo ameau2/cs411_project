@@ -30,7 +30,7 @@ class TravelerAuthenticationForm(forms.ModelForm):
 class TravelerUpdateForm(forms.ModelForm):
     class Meta:
         model = Traveler
-        fields = ("email", "first_name", "last_name", "address", "phone", "bio")#, "is_admin", "is_active", "is_superuser", "is_staff" )
+        fields = ("email", "first_name", "last_name", "city", "address", "phone", "bio")#, "is_admin", "is_active", "is_superuser", "is_staff" )
 
     def clean_email(self):
         if self.is_valid():
@@ -51,6 +51,8 @@ class DestinationUpdateForm(forms.ModelForm):
 class UserForm(forms.Form):
     first_name = forms.CharField(label='first_name', max_length=100)
     last_name = forms.CharField(label='last_name', max_length=100)
+    city_id = forms.IntegerField(label='city id')
+    city = forms.CharField(label='city', max_length=100)
     email = forms.CharField(label='email', max_length=100)
     phone = forms.CharField(label='phone', max_length=100)
     address = forms.CharField(label='address', max_length=200)

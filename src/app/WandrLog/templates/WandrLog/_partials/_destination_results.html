@@ -5,6 +5,7 @@
         <th>Latitude</th>
         <th>Longitude</th>
         <th>Country Code</th>
+        <th>Favorite</th>
         <th>Update</th>
         <th>Delete</th>
     </tr>
@@ -15,6 +16,7 @@
             <th>{{dest.latitude}}</th>
             <th>{{dest.longitude}}</th>
             <th>{{dest.country_code}}</th>
+            <th>{% if dest.id in favorites %}<a href='{% url "unfavorite" destination_id=dest.id %}'>Unfavorite</a> {% else %} <a href='{% url "favorite" destination_id=dest.id %}'>Favorite</a> {% endif %}</th>
             <th><a href='{% url "destination_update" destination_id=dest.id %}'>Edit Destination</a></th>
             <th><a href='{% url "destination_delete" destination_id=dest.id %}'>Delete</a></th>
         </tr>

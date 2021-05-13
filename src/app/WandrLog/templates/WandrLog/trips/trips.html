@@ -12,6 +12,7 @@
 
 </div>
 
+
 <div class="container">
   <h2>Trips</h2>
   {% if request.user.is_authenticated %}
@@ -30,20 +31,23 @@
       <p class="card-text"><small class="text-muted">Created {{trip.published}}</small></p>
       <a href="{% url 'view_trip' trip_id=trip|private:'_id' %}">View</a>
 
+
+      
+
+      <a data-toggle="collapse" data-target="#comments{{trip|private:'_id'}}">Comments</a>
+
       {% if request.user.id == trip.traveler_id %}
         <a href="{% url 'edit_trip' trip_id=trip|private:'_id' %}">Edit Trip</a>
         <a href="{% url 'delete_trip' trip_id=trip|private:'_id' %}" onclick="return confirm('Are you sure?')" >Delete</a>
       {% endif %}
 
-
-      <a data-toggle="collapse" data-target="#comments{{trip|private:'_id'}}">Comments</a>
+      {% include 'WandrLog/_partials/_likes.html' %}
 
       <div id="comments{{trip|private:'_id'}}" class="collapse">
           {% include 'WandrLog/_partials/_comments.html' %}
       </div>
     </div>
 
-    
   </div>
   </div>
 </section>

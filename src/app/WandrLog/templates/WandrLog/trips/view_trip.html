@@ -19,7 +19,7 @@
     <p>Destination: {{trip.destination_name}} Lat,Lon: {{destination.latitude}}, {{destination.longitude}}</p>
 
 
-    <img src="data:image/jpg;base64,{{trip.cover_image}}" alt="..." style="object-fit: none; object-position: center; width: 1000px; max-height: 700px; margin-bottom: 1rem;">
+    <img src="data:image/jpg;base64,{{trip.cover_image}}" alt="..." style="object-fit: cover; object-position: center; width: 1000px; margin-bottom: 1rem;" >
     <p></p>
     <p> Description: {{trip.trip_description}}</p>
     
@@ -43,7 +43,7 @@
 {% if visit.visit_id != -1 %}
 <section>
  <div class="container d-flex align-self-start text-left">
-  <div class="card mb-3">
+  <div class="card mb-5">
     <img src="data:image/jpg;base64,{{visit.visit_image}}" class="card-img-top" alt="..." style="object-fit: cover; object-position: center; width: 1000px; margin-bottom: 1rem;" >
     <div class="card-body">
       <h5 class="card-title">{{visit.visit_name}}</h5>
@@ -61,17 +61,17 @@
 {% endif %}
 {% endfor %}
 
-
+<hr>
 <section>
   <div class="container">
     <h5>Comments</h5>
-
     <div>
       <form method='GET' action="{% url 'create_comment' trip_id=trip|private:'_id' %}">
         <input type='text' name='c' placeholder="Leave a comment.." value='{{ request.GET.c }}' id='intry'>
         <input type='submit' value='Submit' class='button_1' id='sub1'>
       </form>
     </div>
+    <hr><br>
 
      <div>
         {% include 'WandrLog/_partials/_comments.html' %}

@@ -1,0 +1,20 @@
+
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Address</th>
+        <th>Zipcode</th>
+        <th>Phone</th>
+        <th>Website</th>
+        <th>Latitude</th>
+        <th>Longitude</th>
+    </tr>
+    {% for att in attractions %}
+        <tr>
+            {% for a in att %}
+            <th>{{a}}</th>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+
+

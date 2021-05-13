@@ -24,6 +24,7 @@ class Destination(models.Model):
         db_table = 'destination'
 
 
+
 class Favorites(models.Model):
     traveller_id = models.IntegerField()
     dest_id = models.IntegerField()
@@ -88,6 +89,8 @@ class Traveler(AbstractBaseUser):
     objects = UserManager()
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
+    city_id = models.IntegerField()
+    city = models.CharField(max_length=255)
     password = models.CharField(max_length=1025)
     address = models.CharField(max_length=1025, blank=True, null=True)
     phone = models.CharField(max_length=50, blank=True, null=True)

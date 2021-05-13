@@ -36,6 +36,21 @@
                 </div>
             </div>
         </section>
+        <!-- Ranks -->
+        <section class="page-section bg-dark text-white">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8 text-left">
+                    <h2 class="mb-4">Most Favorited Destinations</h2>
+                    <ol type="1">
+                        {% for fav in favorite_rank %}
+                            <li>{{fav.name}}- {{fav.count}} ✈️</li>
+                        {% endfor %}
+                    </ol>
+                    </div>
+                    </div>
+                </div>
+            </section>
         <!-- Services-->
         <section class="page-section" id="services">
             <div class="container">
@@ -63,7 +78,7 @@
                     <div class="col-lg-3 col-md-6 text-center">
                         <div class="mt-5">
                             <i class="fas fa-4x fa-heart text-primary mb-4"></i>
-                            <h3 class="h4 mb-2">Aaron</h3>
+                            <h3 class="h4 mb-2">Not Aaron</h3>
                         </div>
                     </div>
                 </div>

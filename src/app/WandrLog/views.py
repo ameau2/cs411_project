@@ -7,9 +7,10 @@ from django.template.loader import render_to_string
 from django.db import connection, transaction
 
 from .forms import RegistrationForm, TravelerAuthenticationForm, TravelerUpdateForm, TripForm, UserForm, VisitForm, DestinationUpdateForm
-from .models import Traveler, Destination
+from .models import Traveler, Destination, Friend, Favorites
 
 import pymongo
+from collections import namedtuple
 from bson.objectid import ObjectId
 
 import base64
@@ -30,10 +31,17 @@ def psqlRawCommand(cmd):
     cursor = connection.cursor()
     cursor.execute(cmd)
 
+def psqlRawCmdRet(cmd):
+    cursor = connection.cursor()
+    cursor.execute(cmd)
+    return cursor.fetchall()
+
 
 '''---------------- Views ---------------------- '''
 def index(request):
-    return render(request,'WandrLog/index.html')
+    favorite_rank = psqlRawCmdRet("SELECT * FROM favorite_rank LIMIT 10")
+    favorite_rank = [{'name': x[0], 'count': x[1]} for x in favorite_rank]
+    return render(request,'WandrLog/index.html', {'favorite_rank': favorite_rank})
 
 #---------------- User Views -------------------
 def sign_up(request):
@@ -70,7 +78,6 @@ def log_in(request):
             if user:
                 login(request, user)
                 return redirect("home")
-
     else:
         form = TravelerAuthenticationForm()
         
@@ -95,6 +102,10 @@ def traveler_profile(request, traveler_id):
 
     db = getMongoClient()
     context['trips'] = db.Trips.find({'traveler_id':traveler.id})
+    friends = psqlRawCmdRet('SELECT * FROM friend WHERE (traveller_id = {} OR friend_id = {})'.format(traveler_id, traveler_id))
+    context['friend_count'] = len(friends)
+    results = psqlRawCmdRet('SELECT * FROM friend WHERE (traveller_id = {} AND friend_id = {}) OR (traveller_id = {} AND friend_id = {});'.format(traveler_id, request.user.id, request.user.id, traveler_id))
+    context['friends'] = results
     return render(request, 'WandrLog/account/account.html', context)
 
 def traveler_update(request, traveler_id):
@@ -157,8 +168,59 @@ def edit(request, traveler_id):
             return redirect('/WandrLog/users')
     else:
         traveler = Traveler.objects.raw('SELECT * FROM traveler WHERE id = %s;', [traveler_id])[0]
-        form = UserForm(initial={'first_name': traveler.first_name, 'last_name': traveler.last_name, 'email': traveler.email, 'phone':traveler.phone, 'address':traveler.address})
+        form = UserForm(initial={'first_name': traveler.first_name, 'last_name': traveler.last_name, 'city':traveler.city, 'city_id': traveler.city_id, 'email': traveler.email, 'phone':traveler.phone, 'address':traveler.address})
         return render(request, 'WandrLog/account/edit.html', {'form':form, 'traveler':traveler})
+
+def friend(request, traveler_id):
+    cmd = "INSERT INTO Friend(traveller_id, friend_id, date_of_friendship) VALUES ("+ str(request.user.id) + ", " + str(traveler_id) + ", CAST (\'" + str(datetime.datetime.utcnow().date())+ "\'AS DATE));"
+    psqlRawCommand(cmd)
+    return redirect('account', traveler_id=traveler_id)
+
+def unfriend(request, traveler_id):
+    cmd = "DELETE FROM Friend WHERE (traveller_id = {} AND friend_id = {}) OR (traveller_id = {} AND friend_id = {});".format(traveler_id, request.user.id, request.user.id, traveler_id)
+    psqlRawCommand(cmd)
+    return redirect('account', traveler_id=traveler_id)
+
+def advanced(request):
+    return render(request,'WandrLog/advanced.html')
+
+def attractions(request):
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    query = request.GET.get('q')
+
+    if request.is_ajax():
+        if query == None:
+            attractions = psqlRawCmdRet('SELECT * FROM attractions LIMIT 1000;')
+        else:
+            attractions = psqlRawCmdRet('SELECT * FROM attractions WHERE name LIKE \'{}\';'.format('%'+ query + '%'))
+        html = render_to_string(
+                template_name='WandrLog/_partials/_attractions.html', 
+                context={'attractions': attractions}
+            )
+        return JsonResponse(data={"html_from_view": html}, safe=False)
+    else:
+
+        attractions = psqlRawCmdRet('SELECT * FROM attractions LIMIT 1000;')
+        return render(request, 'WandrLog/attractions.html', {'attractions': attractions})
+
+def attractions_form(request, trip_id):
+    query = request.GET.get('q')
+    db = getMongoClient()
+    trip = db.Trips.find_one({'_id':ObjectId(trip_id)})
+    destination = Destination.objects.raw('SELECT * FROM destination WHERE id = {};'.format(trip['destination_id']))[0]
+    print(destination)
+    attractions = psqlRawCmdRet('SELECT * FROM attractions WHERE (name LIKE \'{}\') AND (ABS(latitude - {})<0.1) AND (ABS(longitude - {})<0.1) LIMIT 1000;'.format('%' + query + '%', destination.latitude, destination.longitude))
+    attractions = [x[1] for x in attractions]
+    print(attractions)
+    html = render_to_string(
+            template_name='WandrLog/_partials/_attractions_results_form.html', 
+            context={'attractions': attractions}
+        )
+    return JsonResponse(data={"html_from_view": html}, safe=False)
+
+
 
 #---------------- Trip Views -------------------
 def create_trip(request):
@@ -182,6 +244,7 @@ def create_trip(request):
                 'cover_image':  base64.encodebytes(data.read()).decode('utf-8') ,
                 'visits':[],
                 'comments':[],
+                'likes': [],
                 'published': datetime.datetime.utcnow()
             }
             db.Trips.insert_one(trip).inserted_id
@@ -192,7 +255,44 @@ def create_trip(request):
         form = TripForm()
         context ['trip_form'] = form
         return render(request, 'WandrLog/trips/create_trip.html', context)
+# 
+def edit_trip(request, trip_id):
+    context = {}
 
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    db = getMongoClient()
+    trip = db.Trips.find_one({'_id':ObjectId(trip_id)})
+
+    if request.POST:
+        form = TripForm(request.POST, request.FILES)
+        if form.is_valid():
+
+            data = request.FILES['cover_image']
+
+            db.Trips.update_one({'_id':ObjectId(trip_id)}, { "$set": { "trip_name": form.cleaned_data.get('trip_name'),
+                                                                       'trip_description': form.cleaned_data.get('trip_description'),
+                                                                       'destination_name': form.cleaned_data.get('destination_name'),
+                                                                       'cover_image':  base64.encodebytes(data.read()).decode('utf-8')}})
+
+            return redirect('trips')
+    else:
+        form = TripForm(initial= {"trip_name": trip["trip_name"],
+                                 "trip_description": trip["trip_description"], 
+                                "destination_name": trip["destination_name"]})
+        context ['trip_form'] = form
+        context ['trip_id'] = trip_id
+    return render(request, 'WandrLog/trips/edit_trip.html', context)
+
+def delete_trip(request, trip_id):
+    if not request.user.is_authenticated:
+        return redirect("login")
+    db = getMongoClient()
+    db.Trips.delete_one({'_id':ObjectId(trip_id)})
+    return redirect('/WandrLog/trips')
+
+#---------------- Visit Views -------------------
 def create_visit(request, trip_id):
     context = {}
 
@@ -301,42 +401,6 @@ def delete_visit(request, trip_id, visit_id):
 
     return redirect('view_trip', trip_id=trip_id)
 
-def edit_trip(request, trip_id):
-    context = {}
-
-    if not request.user.is_authenticated:
-        return redirect("login")
-
-    db = getMongoClient()
-    trip = db.Trips.find_one({'_id':ObjectId(trip_id)})
-
-    if request.POST:
-        form = TripForm(request.POST, request.FILES)
-        if form.is_valid():
-
-            data = request.FILES['cover_image']
-
-            db.Trips.update_one({'_id':ObjectId(trip_id)}, { "$set": { "trip_name": form.cleaned_data.get('trip_name'),
-                                                                       'trip_description': form.cleaned_data.get('trip_description'),
-                                                                       'destination_name': form.cleaned_data.get('destination_name'),
-                                                                       'cover_image':  base64.encodebytes(data.read()).decode('utf-8')}})
-
-            return redirect('trips')
-    else:
-        form = TripForm(initial= {"trip_name": trip["trip_name"],
-                                 "trip_description": trip["trip_description"], 
-                                "destination_name": trip["destination_name"]})
-        context ['trip_form'] = form
-        context ['trip_id'] = trip_id
-    return render(request, 'WandrLog/trips/edit_trip.html', context)
-
-def delete_trip(request, trip_id):
-    if not request.user.is_authenticated:
-        return redirect("login")
-    db = getMongoClient()
-    db.Trips.delete_one({'_id':ObjectId(trip_id)})
-    return redirect('/WandrLog/trips')
-
 def trips(request):
     db = getMongoClient()
     return render(request,'WandrLog/trips/trips.html', {'trips': db.Trips.find({})})
@@ -348,29 +412,79 @@ def view_trip(request, trip_id):
     destination = Destination.objects.raw('SELECT * FROM destination WHERE id=%s;', [trip['destination_id']])[0]
     return render(request,'WandrLog/trips/view_trip.html', {'trip': trip, 'traveler': traveler, 'destination': destination})
 
+# Comments & Likes for Trips
 def create_comment(request, trip_id):
     if not request.user.is_authenticated:
         return redirect("login")
-
+ 
     comment = request.GET.get('c')
     if comment:
         client = pymongo.MongoClient('mongodb://root:password@mongodb:27017/')
         db = client['trips']
         trip = db.Trips.find_one({'_id':ObjectId(trip_id)})
-        comment = {'user_id': request.user.id,
-                   'user_name': request.user.first_name + ' ' + request.user.last_name,
-                   'comment': comment,
+
+        comment = { 'comment_id': len(trip['comments']),
+                    'user_id': request.user.id,
+                    'user_name': request.user.first_name + ' ' + request.user.last_name,
+                    'comment': comment,
                     'published': datetime.datetime.utcnow()
                    }
 
         if trip['comments'] is None:
             trip['comments'] = [comment]
         else:
-            trip['comments'].insert(0, comment) 
+            trip['comments'].append(comment) 
 
         db.Trips.update_one({'_id':ObjectId(trip_id)}, { "$set": { "comments": trip['comments']}})
 
     return redirect('view_trip', trip_id=trip_id)
+
+
+def delete_comment(request, trip_id, comment_id):
+    context = {}
+
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    db = getMongoClient()
+    trip = db.Trips.find_one({'_id':ObjectId(trip_id)})
+    comment = trip['comments'][int(comment_id)]
+
+    if comment['comment_id'] == -1:
+        return redirect('view_trip', trip_id=trip_id)
+
+    comment['comment_id'] = -1 #emptied as to not disturb index 
+    comment['user_id'] = ''
+    comment['user_name'] = ''
+    comment['comment'] = ''
+    comment['published'] = ''
+
+
+    db.Trips.update_one({'_id':ObjectId(trip_id)}, { "$set": { "comments": trip['comments'] }})
+
+    return redirect('view_trip', trip_id=trip_id)
+
+def like(request, trip_id):
+    if request.is_ajax():
+        db = getMongoClient()
+        trip = db.Trips.find_one({'_id':ObjectId(trip_id)})
+
+        if trip['likes'] is None:
+            trip['likes'] = [request.user.id]
+        else:
+            if request.user.id in trip['likes']:
+                trip['likes'].remove(request.user.id)
+            else:
+                trip['likes'].append(request.user.id)
+
+        db.Trips.update_one({'_id':ObjectId(trip_id)}, { "$set": { "likes": trip['likes'] }})
+
+        context= {}
+        context['like_count'] = len(trip['likes'])
+        return JsonResponse(context)
+    else:
+        return redirect('view_trip', trip_id=trip_id)
+
 
 #---------------- Destinations Views -------------------
 def destination_delete(request, destination_id):
@@ -409,12 +523,18 @@ def destination_update(request, destination_id):
 
 def destinations(request):
     query = request.GET.get('q')
+    favorites = psqlRawCmdRet('SELECT * FROM favorites WHERE traveller_id = {}'.format(request.user.id))
+    favorites = [x[1] for x in favorites]
+    print(favorites)
     if not request.is_ajax():
+
+
         if query:
             destination = Destination.objects.filter(name__icontains=query)
         else:
             destination = Destination.objects.raw('SELECT * FROM destination WHERE id < 1000;')
-        return render(request, 'WandrLog/destinations/destinations.html', {'destination': destination})
+            
+        return render(request, 'WandrLog/destinations/destinations.html', {'destination': destination, 'favorites': favorites})
     else:
         caller = request.META.get('HTTP_REFERER')
        
@@ -422,16 +542,35 @@ def destinations(request):
             destination = Destination.objects.raw('SELECT * FROM destination WHERE city_name LIKE %s LIMIT 10;', [query + '%'])
             html = render_to_string(
                 template_name='WandrLog/_partials/_destination_results_form.html', 
-                context={'destination': destination}
+                context={'destination': destination, 'favorites':favorites}
             )
         
         else:
             destination = Destination.objects.raw('SELECT * FROM destination WHERE city_name LIKE %s;', [query + '%'])
             html = render_to_string(
                 template_name='WandrLog/_partials/_destination_results.html', 
-                context={'destination': destination}
+                context={'destination': destination, 'favorites': favorites}
             )
         return JsonResponse(data={"html_from_view": html}, safe=False)
         
 
+def favorite(request, destination_id):
+    context = {}
+
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    cmd = "INSERT INTO Favorites(traveller_id, dest_id) VALUES ("+ str(request.user.id) + ", " + str(destination_id) + " );"
+    psqlRawCommand(cmd)
+    return redirect('destinations')
+
+def unfavorite(request, destination_id):
+    context = {}
+
+    if not request.user.is_authenticated:
+        return redirect("login")
+        
+    cmd = "DELETE FROM Favorites WHERE traveller_id="+ str(request.user.id) + "AND dest_id=" + str(destination_id) + ";"
+    psqlRawCommand(cmd)
+    return redirect('destinations')
 
