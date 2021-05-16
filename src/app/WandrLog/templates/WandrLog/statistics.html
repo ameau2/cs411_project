@@ -1,8 +1,9 @@
 {% extends 'WandrLog/base.html' %}
 {% load static %}
 {% block content %}
-<section class="page-section bg-dark text-white" style="height: 100px;">
-</section>
+<div class="container-fluid bg-dark" style="height: 75px;">
+
+</div>
 <section>
 <div id="container" style="width: 75%;">
     <canvas id="favorite-chart" data-url="{% url 'statistics_chart' %}"></canvas>
@@ -15,6 +16,14 @@
       </div>
     </section>
 
+    <section>
+        <div id="container" style="width: 75%;">
+            <canvas id="likes-chart" data-url="{% url 'most_likes_chart' %}"></canvas>
+          </div>
+        </section>
+
+
+    
 <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
 <script>
@@ -46,7 +55,14 @@
               title: {
                 display: true,
                 text: 'Most Favorited Cities By Travelers'
-              }
+              },
+              scales: {
+        yAxes: [{
+            ticks: {
+                beginAtZero: true
+            }
+        }]
+    }
             }
           });
 
@@ -82,7 +98,14 @@ $.ajax({
         title: {
           display: true,
           text: 'Distance Traveled By Travelers'
-        }
+        },
+        scales: {
+        yAxes: [{
+            ticks: {
+                beginAtZero: true
+            }
+        }]
+    }
       }
     });
 
@@ -90,6 +113,48 @@ $.ajax({
 });
 
 });
+
+
+var $likesChart = $("#likes-chart");
+$.ajax({
+  url: $likesChart.data("url"),
+  success: function (data) {
+
+    var ctx = $likesChart[0].getContext("2d");
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.labels,
+        datasets: [{
+          label: 'Trips Liked By Users (likes)',
+          backgroundColor: 'purple',
+          data: data.data
+        }]          
+      },
+      options: {
+        responsive: true,
+        legend: {
+          position: 'top',
+        },
+        title: {
+          display: true,
+          text: 'Trips Liked By Users'
+        },
+        scales: {
+        yAxes: [{
+            ticks: {
+                beginAtZero: true
+            }
+        }]
+    }
+      }
+    });
+
+  }
+});
+
+
 
   </script>
 

@@ -7,7 +7,7 @@ urlpatterns = [
     path('statistics',views.statistics,name="statistics"),
     path('statistics_chart/', views.statistics_chart, name='statistics_chart'),
     path('total_miles_traveled_by_user_chart/', views.total_miles_traveled_by_user_chart, name='total_miles_traveled_by_user_chart'),
-    
+    path('most_likes_chart/', views.most_likes_chart, name='most_likes_chart'),
 
     path('trips',views.trips,name="trips"),
     path('create_trip',views.create_trip,name="create_trip"),

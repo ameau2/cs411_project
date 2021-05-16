@@ -211,6 +211,23 @@ def total_miles_traveled_by_user_chart(request):
         'data': data,
     }) 
 
+def most_likes_chart(request):
+    labels = []
+    data = []
+
+    db = getMongoClient()
+    trips = db.Trips.find({"$query":{}, "$orderby":{"likes" : -1}})
+    print(trips)
+
+    for x in trips:
+        labels.append(x['trip_name'])
+        data.append(len(x['likes'])+1)
+    
+    return JsonResponse(data={
+        'labels': labels,
+        'data': data,
+    }) 
+
 def zipcode_form(request):
     query = request.GET.get('q')
     zipcodes = psqlRawCmdRet('SELECT zip_code, city_name FROM zipcodes WHERE zip_code LIKE \'{}%\' LIMIT 10;'.format(query))
