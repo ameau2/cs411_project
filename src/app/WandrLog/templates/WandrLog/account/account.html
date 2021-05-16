@@ -27,8 +27,6 @@
                     <h2 class="mb-3">Travel Logs</h2>
             </div>
         </section>
-
-        {% if trips|length > 0 %}
     
 
         {% for trip in trips %}
@@ -64,8 +62,5 @@
         </section>
         {% endfor %}
 
-        {%else%}
-          <section><div class="container align-self-start text-left"><p>No adventures yet!</p></div></section>
-        {% endif %}
 
 {% endblock content %}

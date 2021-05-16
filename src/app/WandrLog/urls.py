@@ -3,7 +3,11 @@ from . import views
 
 urlpatterns = [
     path('',views.index,name="home"),
-    path('advanced',views.advanced,name="advanced"),
+
+    path('statistics',views.statistics,name="statistics"),
+    path('statistics_chart/', views.statistics_chart, name='statistics_chart'),
+    path('total_miles_traveled_by_user_chart/', views.total_miles_traveled_by_user_chart, name='total_miles_traveled_by_user_chart'),
+    
 
     path('trips',views.trips,name="trips"),
     path('create_trip',views.create_trip,name="create_trip"),
@@ -41,6 +45,9 @@ urlpatterns = [
 
     path('attractions/', views.attractions, name='attractions'),
     path(r'^attractions_form/(?P<trip_id>\d+)$', views.attractions_form, name='attractions_form'),
+
+    #zipcode_form
+    path('zipcode_form/', views.zipcode_form, name='zipcode_form'),
 ]
 
 

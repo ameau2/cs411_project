@@ -9,7 +9,7 @@ class RegistrationForm(UserCreationForm):
 
     class Meta:
         model = Traveler
-        fields = ("email", "password1", "password2", "first_name", "last_name", "address", "phone", "bio")
+        fields = ("email", "password1", "password2", "first_name", "last_name", "zip_code", "city", "address", "phone", "bio")
 
 
 class TravelerAuthenticationForm(forms.ModelForm):
@@ -53,6 +53,7 @@ class UserForm(forms.Form):
     last_name = forms.CharField(label='last_name', max_length=100)
     city_id = forms.IntegerField(label='city id')
     city = forms.CharField(label='city', max_length=100)
+    zip_code = forms.CharField(label='zip_code', max_length=5)
     email = forms.CharField(label='email', max_length=100)
     phone = forms.CharField(label='phone', max_length=100)
     address = forms.CharField(label='address', max_length=200)
@@ -61,6 +62,7 @@ class UserForm(forms.Form):
 class TripForm(forms.Form):
     trip_name = forms.CharField(label='Trip Title', max_length=100)
     trip_description = forms.CharField(label='Trip Description', max_length=100)
+    destination_id = forms.IntegerField(label='destination_id', widget=forms.HiddenInput())
     destination_name = forms.CharField(label='Destination')
     cover_image = forms.ImageField(label='cover_image')
 
@@ -68,6 +70,7 @@ class TripForm(forms.Form):
 class VisitForm(forms.Form):
     visit_name = forms.CharField(label='name', max_length=100)
     visit_place = forms.CharField(label='place', max_length=100)
+    visit_att_id = forms.IntegerField(label='visit_att_id', widget=forms.HiddenInput())
     visit_log = forms.CharField(label='log', max_length=100)
     visit_image = forms.ImageField(label='image')
 

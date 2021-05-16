@@ -1,7 +1,6 @@
 
 {% for dest in destination %}
-    <option value={{dest.city_name}}>{{dest.city_name}}</option>
-
+    <option id="{{dest.id}}" value="{{dest.city_name}}, {{dest.state}}">{{dest.state}}</option>
 {% endfor %}
 
 

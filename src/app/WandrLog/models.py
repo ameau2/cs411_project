@@ -91,6 +91,7 @@ class Traveler(AbstractBaseUser):
     last_name = models.CharField(max_length=255)
     city_id = models.IntegerField()
     city = models.CharField(max_length=255)
+    zip_code = models.CharField(max_length=5)
     password = models.CharField(max_length=1025)
     address = models.CharField(max_length=1025, blank=True, null=True)
     phone = models.CharField(max_length=50, blank=True, null=True)

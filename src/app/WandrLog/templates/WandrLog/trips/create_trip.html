@@ -16,7 +16,10 @@
 <form action='{% url "create_trip" %}' method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {% for field in trip_form %}
-        <p>{{field.label_tag}}
+        <p> 
+            {% if field.name != 'destination_id' %}
+            {{field.label_tag}}
+            {% endif %}
             {{field}}
             
 
@@ -45,6 +48,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
 <script type="text/javascript">
 const user_input = $("#id_destination_name")
+const user_input_id = $("#id_destination_id")
 const search_icon = $('#search-icon')
 const destination_div = $('#cityname')
 const endpoint = '/WandrLog/destinations/'
@@ -86,6 +90,16 @@ user_input.on('keyup', function () {
     // setTimeout returns the ID of the function to be executed
     scheduled_function = setTimeout(ajax_call, delay_by_in_ms, endpoint, request_parameters)
 })
+
+user_input.on('change', function () {
+    var input = $(this).val();
+    console.log(input)
+    $('#cityname > option').each(function(){
+            if($(this).val() == input ){
+             user_input_id.val($(this).attr('id'))
+            }
+        });
+});
 </script>
 
 {% endblock content %}

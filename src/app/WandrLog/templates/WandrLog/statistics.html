@@ -1,0 +1,96 @@
+{% extends 'WandrLog/base.html' %}
+{% load static %}
+{% block content %}
+<section class="page-section bg-dark text-white" style="height: 100px;">
+</section>
+<section>
+<div id="container" style="width: 75%;">
+    <canvas id="favorite-chart" data-url="{% url 'statistics_chart' %}"></canvas>
+  </div>
+</section>
+
+<section>
+    <div id="container" style="width: 75%;">
+        <canvas id="distance-chart" data-url="{% url 'total_miles_traveled_by_user_chart' %}"></canvas>
+      </div>
+    </section>
+
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+<script>
+
+    $(function () {
+
+      var $favoriteChart = $("#favorite-chart");
+      $.ajax({
+        url: $favoriteChart.data("url"),
+        success: function (data) {
+
+          var ctx = $favoriteChart[0].getContext("2d");
+
+          new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: data.labels,
+              datasets: [{
+                label: 'Favorites',
+                backgroundColor: 'blue',
+                data: data.data
+              }]          
+            },
+            options: {
+              responsive: true,
+              legend: {
+                position: 'top',
+              },
+              title: {
+                display: true,
+                text: 'Most Favorited Cities By Travelers'
+              }
+            }
+          });
+
+        }
+      });
+
+    });
+
+ $(function () {
+
+var $distanceChart = $("#distance-chart");
+$.ajax({
+  url: $distanceChart.data("url"),
+  success: function (data) {
+
+    var ctx = $distanceChart[0].getContext("2d");
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.labels,
+        datasets: [{
+          label: 'Distance Traveled By Traveler (miles)',
+          backgroundColor: 'green',
+          data: data.data
+        }]          
+      },
+      options: {
+        responsive: true,
+        legend: {
+          position: 'top',
+        },
+        title: {
+          display: true,
+          text: 'Distance Traveled By Travelers'
+        }
+      }
+    });
+
+  }
+});
+
+});
+
+  </script>
+
+{% endblock %}

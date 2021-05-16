@@ -1,7 +1,6 @@
 
 {% for attraction in attractions %}
-    <option value="{{attraction}}">{{attraction}}</option>
+    <option id="{{attraction.id}}" value="{{attraction.name}}">{{attraction.name}}</option>
+
+
 {% endfor %}
-
-
-

@@ -59,6 +59,7 @@ def sign_up(request):
             user =  authenticate(email=email, password=raw_password)
             login(request, user)
             return render(request,'WandrLog/index.html')
+
     context['form']=form
     return render(request,'WandrLog/account/sign_up.html',context)
 
@@ -92,7 +93,7 @@ def log_out(request):
     return redirect('home')
 
 def traveler_profile(request, traveler_id):
-
+    db = getMongoClient()
     if not request.user.is_authenticated:
         return redirect("login")
 
@@ -100,8 +101,8 @@ def traveler_profile(request, traveler_id):
     traveler = Traveler.objects.raw('SELECT * FROM traveler WHERE id = %s;', [traveler_id])[0]
     context['traveler'] = traveler
 
-    db = getMongoClient()
-    context['trips'] = db.Trips.find({'traveler_id':traveler.id})
+
+    context['trips'] = db.Trips.find({'traveler_id': traveler.id})
     friends = psqlRawCmdRet('SELECT * FROM friend WHERE (traveller_id = {} OR friend_id = {})'.format(traveler_id, traveler_id))
     context['friend_count'] = len(friends)
     results = psqlRawCmdRet('SELECT * FROM friend WHERE (traveller_id = {} AND friend_id = {}) OR (traveller_id = {} AND friend_id = {});'.format(traveler_id, request.user.id, request.user.id, traveler_id))
@@ -181,8 +182,47 @@ def unfriend(request, traveler_id):
     psqlRawCommand(cmd)
     return redirect('account', traveler_id=traveler_id)
 
-def advanced(request):
-    return render(request,'WandrLog/advanced.html')
+def statistics(request):
+    return render(request,'WandrLog/statistics.html')
+
+def statistics_chart(request):
+    labels = []
+    data = []
+    favorite_rank = psqlRawCmdRet("SELECT * FROM favorite_rank LIMIT 20")
+    for x in favorite_rank:
+        labels.append(x[0])
+        data.append(x[1])
+    
+    return JsonResponse(data={
+        'labels': labels,
+        'data': data,
+    }) 
+
+def total_miles_traveled_by_user_chart(request):
+    labels = []
+    data = []
+    distance_traveled = psqlRawCmdRet("select * from traveler_distance_traveled;")
+    for x in distance_traveled:
+        labels.append(str(x[1]) + ' ' + str(x[2]))
+        data.append(x[3])
+    
+    return JsonResponse(data={
+        'labels': labels,
+        'data': data,
+    }) 
+
+def zipcode_form(request):
+    query = request.GET.get('q')
+    zipcodes = psqlRawCmdRet('SELECT zip_code, city_name FROM zipcodes WHERE zip_code LIKE \'{}%\' LIMIT 10;'.format(query))
+    print(zipcodes)
+    zipcodes = [{'zip_code':x[0], 'city_name':x[1]} for x in zipcodes]
+    html = render_to_string(
+            template_name='WandrLog/_partials/_zipcodes_form.html', 
+            context={'zipcodes': zipcodes}
+        )
+    return JsonResponse(data={"html_from_view": html}, safe=False)
+    
+
 
 def attractions(request):
     if not request.user.is_authenticated:
@@ -210,16 +250,16 @@ def attractions_form(request, trip_id):
     db = getMongoClient()
     trip = db.Trips.find_one({'_id':ObjectId(trip_id)})
     destination = Destination.objects.raw('SELECT * FROM destination WHERE id = {};'.format(trip['destination_id']))[0]
-    print(destination)
-    attractions = psqlRawCmdRet('SELECT * FROM attractions WHERE (name LIKE \'{}\') AND (ABS(latitude - {})<0.1) AND (ABS(longitude - {})<0.1) LIMIT 1000;'.format('%' + query + '%', destination.latitude, destination.longitude))
-    attractions = [x[1] for x in attractions]
+    print(query)
+    print(destination.city_name)
+    attractions = psqlRawCmdRet('SELECT * FROM attractions WHERE (name LIKE \'{}\') AND distance(latitude, longitude, {}, {})<50 LIMIT 100;'.format('%' + query + '%', destination.latitude, destination.longitude))
+    attractions = [{'id':x[0], 'name':x[1], 'zip':x[3]} for x in attractions]
     print(attractions)
     html = render_to_string(
             template_name='WandrLog/_partials/_attractions_results_form.html', 
             context={'attractions': attractions}
         )
     return JsonResponse(data={"html_from_view": html}, safe=False)
-
 
 
 #---------------- Trip Views -------------------
@@ -233,14 +273,14 @@ def create_trip(request):
         if form.is_valid():
             db = getMongoClient()
             data = request.FILES['cover_image']
-            destination = Destination.objects.raw('SELECT * FROM destination WHERE city_name=%s;', [form.cleaned_data.get('destination_name')])[0]
+            #destination = Destination.objects.raw('SELECT * FROM destination WHERE city_name=%s;', [form.cleaned_data.get('destination_name')])[0]
 
             trip = {
                 'trip_name': form.cleaned_data.get('trip_name'),
                 'trip_description': form.cleaned_data.get('trip_description'),
                 'traveler_id': request.user.id,
-                'destination_id': destination.id, 
-                'destination_name': destination.city_name,
+                'destination_id': form.cleaned_data.get('destination_id'), 
+                'destination_name': form.cleaned_data.get('destination_name'),
                 'cover_image':  base64.encodebytes(data.read()).decode('utf-8') ,
                 'visits':[],
                 'comments':[],
@@ -272,14 +312,17 @@ def edit_trip(request, trip_id):
             data = request.FILES['cover_image']
 
             db.Trips.update_one({'_id':ObjectId(trip_id)}, { "$set": { "trip_name": form.cleaned_data.get('trip_name'),
+                                                                       'destination_id' : form.cleaned_data.get('destination_id'),
                                                                        'trip_description': form.cleaned_data.get('trip_description'),
                                                                        'destination_name': form.cleaned_data.get('destination_name'),
                                                                        'cover_image':  base64.encodebytes(data.read()).decode('utf-8')}})
 
             return redirect('trips')
     else:
+        print()
         form = TripForm(initial= {"trip_name": trip["trip_name"],
-                                 "trip_description": trip["trip_description"], 
+                                 "destination_id": trip["destination_id"],
+                                 "trip_description": trip["trip_description"],
                                 "destination_name": trip["destination_name"]})
         context ['trip_form'] = form
         context ['trip_id'] = trip_id
@@ -291,6 +334,25 @@ def delete_trip(request, trip_id):
     db = getMongoClient()
     db.Trips.delete_one({'_id':ObjectId(trip_id)})
     return redirect('/WandrLog/trips')
+
+def trips(request):
+    db = getMongoClient()
+    return render(request,'WandrLog/trips/trips.html', {'trips': db.Trips.find({})})
+
+def view_trip(request, trip_id):
+    db = getMongoClient()
+    trip = db.Trips.find_one({'_id':ObjectId(trip_id)})
+    locations = []
+    i = len(trip['visits'])
+    for visit in trip['visits']:
+        if visit['visit_id'] != -1: 
+            viz = psqlRawCmdRet("SELECT * FROM attractions WHERE id = {} AND name = \'{}\';".format(visit['visit_place_id'], visit['visit_place']))[0]
+            locations.append({'name':viz[1], 'lat': viz[6], 'long':viz[7], 'idx': i})
+        i-=1
+    print(locations)
+    traveler = Traveler.objects.raw('SELECT * FROM traveler WHERE id = %s;', [trip['traveler_id']])[0]
+    destination = Destination.objects.raw('SELECT * FROM destination WHERE id=%s;', [trip['destination_id']])[0]
+    return render(request,'WandrLog/trips/view_trip.html', {'trip': trip, 'traveler': traveler, 'destination': destination, 'locations':locations})
 
 #---------------- Visit Views -------------------
 def create_visit(request, trip_id):
@@ -314,9 +376,11 @@ def create_visit(request, trip_id):
             else:
                 vid = 0
 
+
             visit = {
                 'visit_id': vid,
                 'visit_name': form.cleaned_data.get('visit_name'),
+                'visit_place_id': form.cleaned_data.get('visit_att_id'),
                 'visit_place': form.cleaned_data.get('visit_place'),
                 'visit_log': form.cleaned_data.get('visit_log'),
                 'visit_image':  base64.encodebytes(data.read()).decode('utf-8') ,
@@ -400,17 +464,6 @@ def delete_visit(request, trip_id, visit_id):
     db.Trips.update_one({'_id':ObjectId(trip_id)}, { "$set": { "visits": trip['visits'] }})
 
     return redirect('view_trip', trip_id=trip_id)
-
-def trips(request):
-    db = getMongoClient()
-    return render(request,'WandrLog/trips/trips.html', {'trips': db.Trips.find({})})
-
-def view_trip(request, trip_id):
-    db = getMongoClient()
-    trip = db.Trips.find_one({'_id':ObjectId(trip_id)})
-    traveler = Traveler.objects.raw('SELECT * FROM traveler WHERE id = %s;', [trip['traveler_id']])[0]
-    destination = Destination.objects.raw('SELECT * FROM destination WHERE id=%s;', [trip['destination_id']])[0]
-    return render(request,'WandrLog/trips/view_trip.html', {'trip': trip, 'traveler': traveler, 'destination': destination})
 
 # Comments & Likes for Trips
 def create_comment(request, trip_id):
@@ -539,20 +592,33 @@ def destinations(request):
         caller = request.META.get('HTTP_REFERER')
        
         if 'create_trip' in caller or 'edit_trip' in caller:
-            destination = Destination.objects.raw('SELECT * FROM destination WHERE city_name LIKE %s LIMIT 10;', [query + '%'])
+            destination = psqlRawCmdRet('SELECT id, city_name, state FROM destination_states_d WHERE (city_name LIKE \'{}\') LIMIT 10;'.format('%' + query + '%'))
+            destination = [{'id':x[0], 'city_name':x[1], 'state':x[2]} for x in destination]
             html = render_to_string(
                 template_name='WandrLog/_partials/_destination_results_form.html', 
                 context={'destination': destination, 'favorites':favorites}
             )
         
         else:
-            destination = Destination.objects.raw('SELECT * FROM destination WHERE city_name LIKE %s;', [query + '%'])
+            destination = Destination.objects.raw('SELECT * FROM destination_states_zip WHERE city_name LIKE %s;', [query + '%'])
             html = render_to_string(
                 template_name='WandrLog/_partials/_destination_results.html', 
                 context={'destination': destination, 'favorites': favorites}
             )
         return JsonResponse(data={"html_from_view": html}, safe=False)
         
+
+def destinations_signup(request):
+    query = request.GET.get('q')
+
+
+    destination = Destination.objects.raw('SELECT * FROM destination WHERE city_name LIKE %s LIMIT 10;', [query + '%'])
+    html = render_to_string(
+                template_name='WandrLog/_partials/_destination_results_form.html', 
+                context={'destination': destination}
+            )
+        
+    return JsonResponse(data={"html_from_view": html}, safe=False)
 
 def favorite(request, destination_id):
     context = {}

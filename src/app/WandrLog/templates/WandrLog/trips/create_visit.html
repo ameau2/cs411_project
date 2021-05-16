@@ -18,7 +18,7 @@
 <form action="{% url 'create_visit' trip_id=trip|private:'_id'%}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {% for field in visit_form %}
-        <p>{{field.label_tag}}
+        <p> {% if field.name != 'visit_att_id' %}{{field.label_tag}}{% endif %}
             {{field}}
 
             {% if field.help_text %}
@@ -28,6 +28,7 @@
             {% for error in field.errors %}
                 <p style="color: red;">{{error}}</p>
             {% endfor %}
+
             {% if field.name == 'visit_place' %}
             <datalist id="attraction_name">
                     {% include 'WandrLog/_partials/_attractions_results_form.html' %}
@@ -41,6 +42,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
 <script type="text/javascript">
 const user_input = $("#id_visit_place")
+const user_input_id = $("#id_visit_att_id")
 const search_icon = $('#search-icon')
 const attraction_div = $('#attraction_name')
 const endpoint = "{% url 'attractions_form' trip_id=trip|private:'_id' %}"
@@ -82,6 +84,18 @@ user_input.on('keyup', function () {
     // setTimeout returns the ID of the function to be executed
     scheduled_function = setTimeout(ajax_call, delay_by_in_ms, endpoint, request_parameters)
 })
+
+user_input.on('change', function () {
+    var input = $(this).val();
+    console.log(input)
+    $('#attraction_name > option').each(function(){
+            if($(this).val() == input ){
+             user_input_id.val($(this).attr('id'))
+            }
+        });
+
+
+});
 </script>
 
 {% endblock content %}
