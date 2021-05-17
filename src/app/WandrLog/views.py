@@ -127,6 +127,8 @@ def traveler_update(request, traveler_id):
                 "email": request.user.email,
                 "first_name": request.user.first_name, 
                 "last_name": request.user.last_name, 
+                "zip_code": request.user.zip_code,
+                "city": request.user.city,
                 "address": request.user.address, 
                 "phone": request.user.phone, 
                 "bio": request.user.bio
@@ -149,11 +151,12 @@ def users(request):
 
 def delete_user(request, traveler_id):
     if not request.user.is_authenticated:
-        return redirect("login")
+        return redirect("WandrLog/login")
 
     psqlRawCommand('DELETE FROM traveler WHERE id = {};'.format(traveler_id))
     db = getMongoClient()
-    db.Trips.delete({'traveler_id':traveler_id})
+    if db.Trips.find({'traveler_id':traveler_id}):
+        db.Trips.remove({'traveler_id':traveler_id})
 
     return redirect('/WandrLog/users')
 
@@ -439,6 +442,7 @@ def edit_visit(request, trip_id, visit_id):
             data = request.FILES['visit_image']
 
             visit['visit_name'] = form.cleaned_data.get('visit_name')
+            visit['visit_place_id'] = form.cleaned_data.get('visit_att_id')
             visit['visit_place'] = form.cleaned_data.get('visit_place')
             visit['visit_log'] = form.cleaned_data.get('visit_log')
             visit['visit_image'] = base64.encodebytes(data.read()).decode('utf-8')
@@ -449,16 +453,15 @@ def edit_visit(request, trip_id, visit_id):
     else:
         form = VisitForm(initial =
                                 {'visit_name':  visit['visit_name'], 
+                                'visit_att_id': visit['visit_place_id'],
                                 'visit_place':  visit['visit_place'],
                                 'visit_log':  visit['visit_log'],
                                 'visit_image':  visit['visit_image']
                                 }
                                 )
-        context ['visit_form'] = form
-        context ['trip'] = db.Trips.find_one({'_id':ObjectId(trip_id)})
-        context ['visit_id'] = visit_id
+
     return render(request, 'WandrLog/trips/edit_visit.html', context)
-        
+
 def delete_visit(request, trip_id, visit_id):
     context = {}
 
@@ -617,7 +620,7 @@ def destinations(request):
             )
         
         else:
-            destination = Destination.objects.raw('SELECT * FROM destination_states_zip WHERE city_name LIKE %s;', [query + '%'])
+            destination = Destination.objects.raw('SELECT * FROM destination WHERE city_name LIKE %s;', [query + '%'])
             html = render_to_string(
                 template_name='WandrLog/_partials/_destination_results.html', 
                 context={'destination': destination, 'favorites': favorites}
